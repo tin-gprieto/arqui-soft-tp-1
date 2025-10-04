@@ -17,6 +17,10 @@ const port = 3000;
 
 app.use(express.json());
 
+app.get("/", (req, res) => {
+  res.send(`Hola desde instancia ${process.env.HOSTNAME}`);
+});
+
 // ACCOUNT endpoints
 
 app.get("/accounts", (req, res) => {
