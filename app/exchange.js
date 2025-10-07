@@ -9,7 +9,7 @@ const statsdClient = dgram.createSocket('udp4');
 // Función helper para enviar métricas
 function sendMetric(name, value, type = 'c') {
   console.log(`Sending metric: ${name}:${value}|${type}`);
-  const message = `stats.${name}:${value}|${type}`;
+  const message = `${name}:${value}|${type}`;
   statsdClient.send(message, 8125, 'graphite', (err) => {
     if (err) console.error('Error sending metric:', err);
   });
@@ -121,8 +121,9 @@ export async function exchange(exchangeRequest) {
         sendMetric(`exchange.volume.${baseCurrency}`, baseAmount, 'c');
         sendMetric(`exchange.volume.${counterCurrency}`, counterAmount, 'c');
         
-        sendMetric(`exchange.neto.${baseCurrency}`, baseAmount, 'c');
-        sendMetric(`exchange.neto.${counterCurrency}`, -counterAmount, 'c');
+        // El endpoint te permite COMPRAR counterCurrency VENDIENDO baseCurrency
+        sendMetric(`exchange.neto.${baseCurrency}`, -baseAmount, 'c');
+        sendMetric(`exchange.neto.${counterCurrency}`, +counterAmount, 'c');
       } else {
         console.log('Transferring part 2 failed ');
         //could not transfer to clients' counter account, return base amount to client

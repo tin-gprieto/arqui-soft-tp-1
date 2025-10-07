@@ -1,0 +1,110 @@
+config:
+  environments:
+    api:
+      target: 'http://localhost:5555'
+      plugins:
+        statsd:
+          host: localhost
+          port: 8125
+          prefix: "artillery-api"
+
+  pool: 50
+
+  phases:
+    - name: Ramp
+      duration: 30
+      arrivalRate: 1
+      rampTo: 5
+    - name: Plain
+      duration: 60
+      arrivalRate: 5
+
+scenarios:
+  - name: Exchange mixed USD/ARS
+    flow:
+      # USD -> ARS (distintos montos)
+      - post:
+          url: '/exchange'
+          json:
+            baseCurrency: "USD"
+            counterCurrency: "ARS"
+            baseAccountId: 1
+            counterAccountId: 2
+            baseAmount: 10
+      - post:
+          url: '/exchange'
+          json:
+            baseCurrency: "USD"
+            counterCurrency: "ARS"
+            baseAccountId: 1
+            counterAccountId: 2
+            baseAmount: 25
+      - post:
+          url: '/exchange'
+          json:
+            baseCurrency: "USD"
+            counterCurrency: "ARS"
+            baseAccountId: 1
+            counterAccountId: 2
+            baseAmount: 100
+
+      # ARS -> USD (distintos montos)
+      - post:
+          url: '/exchange'
+          json:
+            baseCurrency: "ARS"
+            counterCurrency: "USD"
+            baseAccountId: 1
+            counterAccountId: 2
+            baseAmount: 1500
+      - post:
+          url: '/exchange'
+          json:
+            baseCurrency: "ARS"
+            counterCurrency: "USD"
+            baseAccountId: 1
+            counterAccountId: 2
+            baseAmount: 5000
+      - post:
+          url: '/exchange'
+          json:
+            baseCurrency: "ARS"
+            counterCurrency: "USD"
+            baseAccountId: 1
+            counterAccountId: 2
+            baseAmount: 12345
+
+      # Alternadas adicionales
+      - post:
+          url: '/exchange'
+          json:
+            baseCurrency: "USD"
+            counterCurrency: "ARS"
+            baseAccountId: 1
+            counterAccountId: 2
+            baseAmount: 7
+      - post:
+          url: '/exchange'
+          json:
+            baseCurrency: "ARS"
+            counterCurrency: "USD"
+            baseAccountId: 1
+            counterAccountId: 2
+            baseAmount: 750
+      - post:
+          url: '/exchange'
+          json:
+            baseCurrency: "USD"
+            counterCurrency: "ARS"
+            baseAccountId: 1
+            counterAccountId: 2
+            baseAmount: 55
+      - post:
+          url: '/exchange'
+          json:
+            baseCurrency: "ARS"
+            counterCurrency: "USD"
+            baseAccountId: 1
+            counterAccountId: 2
+            baseAmount: 3000
+
