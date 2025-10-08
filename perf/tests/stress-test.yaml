@@ -46,3 +46,15 @@ scenarios:
     flow:
       - get:
           url: '/rates'
+
+  - name: Exchange transaction
+    weight: 5
+    flow:
+      - post:
+          url: "/exchange"
+          json:
+            baseCurrency: "USD"
+            counterCurrency: "ARS"
+            baseAmount: 1.0
+            baseAccountId: 2
+            counterAccountId: 1
