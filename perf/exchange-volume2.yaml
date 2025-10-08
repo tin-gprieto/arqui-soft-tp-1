@@ -20,7 +20,8 @@ config:
       arrivalRate: 5
 
 scenarios:
-  - name: Exchange (/exchange)
+  - name: Small (23 USD)
+    weight: 80
     flow:
       - post:
           url: '/exchange'
@@ -29,4 +30,28 @@ scenarios:
             counterCurrency: "ARS"
             baseAccountId: 1
             counterAccountId: 2
-            baseAmount: 23
+            baseAmount: 10
+
+  - name: High (1500 USD)
+    weight: 15
+    flow:
+      - post:
+          url: '/exchange'
+          json:
+            baseCurrency: "USD"
+            counterCurrency: "ARS"
+            baseAccountId: 1
+            counterAccountId: 2
+            baseAmount: 1000
+
+  - name: Spike (10000 USD)
+    weight: 5
+    flow:
+      - post:
+          url: '/exchange'
+          json:
+            baseCurrency: "USD"
+            counterCurrency: "ARS"
+            baseAccountId: 1
+            counterAccountId: 2
+            baseAmount: 6000

@@ -20,37 +20,17 @@ config:
       arrivalRate: 4
 
 scenarios:
-  - name: Exchange all currencies (ARS, USD, EUR, BRL)
+  - name: Exchange all currency pairs (one of each)
     flow:
-      # ARS -> USD
+      # BRL -> ARS
       - post:
           url: '/exchange'
           json:
-            baseCurrency: "ARS"
-            counterCurrency: "USD"
-            baseAccountId: 1
-            counterAccountId: 2
-            baseAmount: 1000
-
-      # USD -> ARS
-      - post:
-          url: '/exchange'
-          json:
-            baseCurrency: "USD"
+            baseCurrency: "BRL"
             counterCurrency: "ARS"
-            baseAccountId: 2
+            baseAccountId: 4
             counterAccountId: 1
-            baseAmount: 10
-
-      # ARS -> EUR
-      - post:
-          url: '/exchange'
-          json:
-            baseCurrency: "ARS"
-            counterCurrency: "EUR"
-            baseAccountId: 1
-            counterAccountId: 3
-            baseAmount: 2000
+            baseAmount: 50
 
       # EUR -> ARS
       - post:
@@ -62,6 +42,16 @@ scenarios:
             counterAccountId: 1
             baseAmount: 15
 
+      # USD -> ARS
+      - post:
+          url: '/exchange'
+          json:
+            baseCurrency: "USD"
+            counterCurrency: "ARS"
+            baseAccountId: 2
+            counterAccountId: 1
+            baseAmount: 10
+
       # ARS -> BRL
       - post:
           url: '/exchange'
@@ -72,26 +62,15 @@ scenarios:
             counterAccountId: 4
             baseAmount: 3000
 
-      # BRL -> ARS
+      # ARS -> EUR
       - post:
           url: '/exchange'
           json:
-            baseCurrency: "BRL"
-            counterCurrency: "ARS"
-            baseAccountId: 4
-            counterAccountId: 1
-            baseAmount: 50
-
-      # Segundo ciclo con montos distintos para variar el volumen
-      # USD -> ARS
-      - post:
-          url: '/exchange'
-          json:
-            baseCurrency: "USD"
-            counterCurrency: "ARS"
-            baseAccountId: 2
-            counterAccountId: 1
-            baseAmount: 25
+            baseCurrency: "ARS"
+            counterCurrency: "EUR"
+            baseAccountId: 1
+            counterAccountId: 3
+            baseAmount: 2000
 
       # ARS -> USD
       - post:
@@ -101,45 +80,5 @@ scenarios:
             counterCurrency: "USD"
             baseAccountId: 1
             counterAccountId: 2
-            baseAmount: 1500
-
-      # EUR -> ARS
-      - post:
-          url: '/exchange'
-          json:
-            baseCurrency: "EUR"
-            counterCurrency: "ARS"
-            baseAccountId: 3
-            counterAccountId: 1
-            baseAmount: 30
-
-      # ARS -> EUR
-      - post:
-          url: '/exchange'
-          json:
-            baseCurrency: "ARS"
-            counterCurrency: "EUR"
-            baseAccountId: 1
-            counterAccountId: 3
-            baseAmount: 2500
-
-      # BRL -> ARS
-      - post:
-          url: '/exchange'
-          json:
-            baseCurrency: "BRL"
-            counterCurrency: "ARS"
-            baseAccountId: 4
-            counterAccountId: 1
-            baseAmount: 75
-
-      # ARS -> BRL
-      - post:
-          url: '/exchange'
-          json:
-            baseCurrency: "ARS"
-            counterCurrency: "BRL"
-            baseAccountId: 1
-            counterAccountId: 4
-            baseAmount: 3500
+            baseAmount: 1000
 

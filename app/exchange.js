@@ -8,7 +8,6 @@ const statsdClient = dgram.createSocket('udp4');
 
 // Función helper para enviar métricas
 function sendMetric(name, value, type = 'c') {
-  console.log(`Sending metric: ${name}:${value}|${type}`);
   const message = `${name}:${value}|${type}`;
   statsdClient.send(message, 8125, 'graphite', (err) => {
     if (err) console.error('Error sending metric:', err);
@@ -62,7 +61,6 @@ export function setRate(rateRequest) {
 
 //executes an exchange operation
 export async function exchange(exchangeRequest) {
-  console.log('Doing exchange request');
   const {
     baseCurrency,
     counterCurrency,
@@ -79,14 +77,6 @@ export async function exchange(exchangeRequest) {
   const baseAccount = findAccountByCurrency(baseCurrency);
   //find our account on the counter currency
   const counterAccount = findAccountByCurrency(counterCurrency);
-  console.log('Base account: ', baseAccount);
-  console.log('Counter account: ', counterAccount);
-  console.log('Counter amount: ', counterAmount);
-  console.log('Base amount: ', baseAmount);
-  console.log('Exchange rate: ', exchangeRate);
-  console.log('Rates: ', rates);
-  console.log('Base currency: ', baseCurrency);
-  console.log('Counter currency: ', counterCurrency);
   //construct the result object with defaults
   const exchangeResult = {
     id: nanoid(),
@@ -101,22 +91,16 @@ export async function exchange(exchangeRequest) {
   //check if we have funds on the counter currency account
   if (counterAccount.balance >= counterAmount) {
     //try to transfer from clients' base account
-    console.log('Transferring is available');
     if (await transfer(clientBaseAccountId, baseAccount.id, baseAmount)) {
       //try to transfer to clients' counter account
-      console.log('Transferring part 1 ok ');
-
       if (
         await transfer(counterAccount.id, clientCounterAccountId, counterAmount)
       ) {
-        console.log('Transferring part 2 ok ');
         //all good, update balances
         baseAccount.balance += baseAmount;
         counterAccount.balance -= counterAmount;
         exchangeResult.ok = true;
         exchangeResult.counterAmount = counterAmount;
-
-        console.log('Sending metrics');
         
         sendMetric(`exchange.volume.${baseCurrency}`, baseAmount, 'c');
         sendMetric(`exchange.volume.${counterCurrency}`, counterAmount, 'c');
@@ -125,18 +109,15 @@ export async function exchange(exchangeRequest) {
         sendMetric(`exchange.neto.${baseCurrency}`, -baseAmount, 'c');
         sendMetric(`exchange.neto.${counterCurrency}`, +counterAmount, 'c');
       } else {
-        console.log('Transferring part 2 failed ');
         //could not transfer to clients' counter account, return base amount to client
         await transfer(baseAccount.id, clientBaseAccountId, baseAmount);
         exchangeResult.obs = "Could not transfer to clients' account";
       }
     } else {
-      console.log('Transferring part 1 failed ');
       //could not withdraw from clients' account
       exchangeResult.obs = "Could not withdraw from clients' account";
     }
   } else {
-    console.log('Not enough funds on internal counter account');
     //not enough funds on internal counter account
     exchangeResult.obs = "Not enough funds on counter currency account";
   }
