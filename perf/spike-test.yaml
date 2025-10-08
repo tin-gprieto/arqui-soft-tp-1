@@ -1,0 +1,65 @@
+config:
+  environments:
+    api:
+      target: 'http://localhost:5555'
+      plugins:
+        statsd:
+          host: localhost
+          port: 8125
+          prefix: "artillery-api"
+
+  pool: 50 # All HTTP requests from all virtual users will be sent over the same connections
+
+  phases:
+    # Spike 1
+    - name: Spike 1
+      duration: 10
+      arrivalRate: 7000
+      rampTo: 300
+
+    # Recuperación
+    - name: Steady 2
+      duration: 25
+      arrivalRate: 300
+
+    # Spike 2
+    - name: Spike 2
+      duration: 6
+      arrivalRate: 3000
+      rampTo: 300
+
+    # Fase final estable
+    - name: Steady 4
+      duration: 40
+      arrivalRate: 300
+
+
+scenarios:
+
+  - name: Exchange transaction
+    weight: 5
+    flow:
+      - post:
+          url: "/exchange"
+          json:
+            baseCurrency: "USD"
+            counterCurrency: "ARS"
+            baseAmount: 1.0
+            baseAccountId: 2
+            counterAccountId: 1
+
+  - name: Rates PUT (/rates)
+    weight: 2             # ponderación
+    flow:
+      - put:
+          url: '/rates'
+          json:
+            baseCurrency: "USD"
+            counterCurrency: "EUR"
+            rate: 0.85
+
+  - name: Get Rates (/rates)
+    weight: 3
+    flow:
+      - get:
+          url: '/rates'
