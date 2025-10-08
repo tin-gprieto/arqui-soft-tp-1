@@ -90,12 +90,6 @@ if [[ ! -f "$SCENARIO_FILE" ]]; then
   exit 1
 fi
 
-if ! command -v artillery >/dev/null 2>&1; then
-  echo "Error: 'artillery' no está instalado o no está en PATH."
-  echo "Instalalo con: npm install -g artillery"
-  exit 1
-fi
-
 # ---- Generar nombres de salida ----
 BASENAME="$(basename "$SCENARIO_FILE" .yaml)"
 JSON_OUT="results-${BASENAME}.json"
@@ -105,11 +99,11 @@ HTML_OUT="results-${BASENAME}.html"
 echo "========================================"
 echo " Ejecutando: artillery run -e ${ENVIRONMENT} ${SCENARIO_FILE}"
 echo "----------------------------------------"
-artillery run -e "$ENVIRONMENT" "$SCENARIO_FILE" -o "$JSON_OUT"
+ npm run artillery -- run -e "$ENVIRONMENT" "$SCENARIO_FILE" -o "$JSON_OUT"
 
 # ---- Generar reporte HTML ----
 echo "Generando reporte HTML: ${HTML_OUT}"
-artillery report --output "$HTML_OUT" "$JSON_OUT"
+ npm run artillery -- report --output "$HTML_OUT" "$JSON_OUT"
 
 echo "----------------------------------------"
 echo "✅ Test finalizado"
