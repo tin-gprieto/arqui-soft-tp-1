@@ -17,7 +17,7 @@ config:
       rampTo: 350         
 
     - name: Peak load
-      duration: 40        
+      duration: 60        
       arrivalRate: 350
 
     - name: Ramp-down
@@ -26,8 +26,8 @@ config:
       rampTo: 5           
 
     - name: Steady
-      duration: 60
-      arrivalRate: 50      
+      duration: 30
+      arrivalRate: 5      
 
 scenarios:
 
