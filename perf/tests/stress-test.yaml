@@ -11,30 +11,25 @@ config:
   pool: 50 # All HTTP requests from all virtual users will be sent over the same connections
 
   phases:
+    - name: Ramp-up
+      duration: 30        # 30 segundos para llegar al pico
+      arrivalRate: 50     # empieza con 10 usuarios/seg
+      rampTo: 650         # sube gradualmente hasta 600 usuarios/seg
+
     - name: Peak load
-      duration: 40        # 15 segundos de pico
-      arrivalRate: 600     # 750 usuarios/seg
+      duration: 40        # mantiene el pico
+      arrivalRate: 650
+
     - name: Ramp-down
       duration: 30
-      arrivalRate: 10
+      arrivalRate: 650
       rampTo: 5           # baja gradualmente a 5 usuarios/seg
+
     - name: Steady
       duration: 60
-      arrivalRate: 5      # flujo normal
+      arrivalRate: 50      # flujo normal
 
 scenarios:
-
-  - name: Exchange transaction
-    weight: 3
-    flow:
-      - post:
-          url: "/exchange"
-          json:
-            baseCurrency: "USD"
-            counterCurrency: "ARS"
-            baseAmount: 1.0
-            baseAccountId: 2
-            counterAccountId: 1
 
   - name: Rates PUT (/rates)
     weight: 1             # ponderación
@@ -47,7 +42,19 @@ scenarios:
             rate: 0.85
 
   - name: Get Rates (/rates)
-    weight: 3
+    weight: 10
     flow:
       - get:
           url: '/rates'
+
+  - name: Exchange transaction
+    weight: 5
+    flow:
+      - post:
+          url: "/exchange"
+          json:
+            baseCurrency: "USD"
+            counterCurrency: "ARS"
+            baseAmount: 1.0
+            baseAccountId: 2
+            counterAccountId: 1
