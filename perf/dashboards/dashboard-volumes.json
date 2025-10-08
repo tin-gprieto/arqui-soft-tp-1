@@ -106,7 +106,7 @@
         {
           "refCount": 0,
           "refId": "Total",
-          "target": "stats.exchange.volume.BRL",
+          "target": "summarize(stats_counts.exchange.volume.BRL, \"10s\", \"sum\", true)",
           "textEditor": true
         },
         {
@@ -117,7 +117,7 @@
           "hide": false,
           "refCount": 0,
           "refId": "Neto",
-          "target": "stats.exchange.neto.BRL",
+          "target": "summarize(stats_counts.exchange.neto.BRL, \"10s\", \"sum\", true)",
           "textEditor": true
         }
       ],
@@ -190,7 +190,7 @@
         "x": 0,
         "y": 8
       },
-      "id": 10,
+      "id": 13,
       "options": {
         "legend": {
           "calcs": [],
@@ -208,8 +208,8 @@
       "targets": [
         {
           "refCount": 0,
-          "refId": "Total",
-          "target": "stats.exchange.volume.EUR",
+          "refId": "A",
+          "target": "summarize(stats_counts.exchange.volume.EUR,\"10s\",\"sum\",true)",
           "textEditor": true
         },
         {
@@ -219,8 +219,8 @@
           },
           "hide": false,
           "refCount": 0,
-          "refId": "Neto",
-          "target": "stats.exchange.neto.EUR",
+          "refId": "B",
+          "target": "summarize(stats_counts.exchange.neto.EUR,\"10s\",\"sum\",true)",
           "textEditor": true
         }
       ],
@@ -288,12 +288,12 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 7,
+        "h": 8,
         "w": 24,
         "x": 0,
         "y": 16
       },
-      "id": 9,
+      "id": 12,
       "options": {
         "legend": {
           "calcs": [],
@@ -311,8 +311,8 @@
       "targets": [
         {
           "refCount": 0,
-          "refId": "Total USD",
-          "target": "stats.exchange.volume.USD",
+          "refId": "A",
+          "target": "summarize(stats_counts.exchange.volume.USD,\"10s\",\"sum\",true)",
           "textEditor": true
         },
         {
@@ -322,8 +322,8 @@
           },
           "hide": false,
           "refCount": 0,
-          "refId": "Neto USD",
-          "target": "stats.exchange.neto.USD",
+          "refId": "B",
+          "target": "summarize(stats_counts.exchange.neto.USD,\"10s\",\"sum\",true)",
           "textEditor": true
         }
       ],
@@ -394,7 +394,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 23
+        "y": 24
       },
       "id": 8,
       "options": {
@@ -519,7 +519,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 30
+        "y": 31
       },
       "id": 4,
       "options": {
@@ -713,7 +713,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 37
+        "y": 38
       },
       "id": 5,
       "options": {
@@ -861,7 +861,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 44
+        "y": 45
       },
       "id": 3,
       "options": {
@@ -1009,7 +1009,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 51
+        "y": 52
       },
       "id": 1,
       "options": {
@@ -1060,7 +1060,7 @@
     }
   ],
   "preload": false,
-  "refresh": "10s",
+  "refresh": "1d",
   "schemaVersion": 40,
   "tags": [],
   "templating": {
@@ -1137,13 +1137,13 @@
     ]
   },
   "time": {
-    "from": "now-3m",
+    "from": "now-5m",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
   "title": "Main dashboard",
   "uid": "arxIPammk",
-  "version": 17,
+  "version": 24,
   "weekStart": ""
 }
