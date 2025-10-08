@@ -6,7 +6,9 @@
   "scripts": {
     "artillery": "artillery",
     "api": "artillery run rates.yaml -e api",
-    "scenario": "./run-scenario.sh"
+    "scenario": "./run-scenario.sh",
+    "scenario-persist": "./run-scenario-persist.sh",
+    "scenario-html": "./run-scenario-html.sh"
   },
   "author": "",
   "license": "ISC",
