@@ -2,15 +2,16 @@
 
 # Escenarios
 
-SCENARIOS =(
+SCENARIOS=(
   "load"
   "spike"
   "stress"
-  "endurance"
   "breakpoint"
+  "endurance"
 )
 
 # Ejecutar todos los escenarios de rendimiento
 for scenario in "${SCENARIOS[@]}"; do
-  ./run-scenario.sh --${scenario} --env api"
+  ./run-scenario.sh --${scenario} --env api
+  sleep 15
 done
