@@ -149,9 +149,6 @@ class DataManager {
     this.rates[counterCurrency][baseCurrency] = Number((1 / rate).toFixed(5));
   }
 
-  addLogEntry(logEntry) {
-    this.log.push(logEntry);
-  }
 
   async addLogEntryAndSave(logEntry) {
     return new Promise(async (resolve, reject) => {
@@ -186,15 +183,6 @@ class DataManager {
     }
   }
 
-  async saveLogs() {
-    try {
-      await this._saveImmediately(this.log, './state/log.json');
-      console.log('Log saved successfully');
-    } catch (error) {
-      console.error('Failed to save log:', error);
-      throw error;
-    }
-  }
 
   // Public API - Transaction Support
   createBackup() {
@@ -215,16 +203,6 @@ class DataManager {
     this.log = [...backup.log];
   }
 
-  // Public API - Raw Data Access (for queue operations)
-  getRawData() {
-    return {
-      accounts: this.accounts,
-      accountsByCurrency: this.accountsByCurrency,
-      accountsArray: this.accountsArray,
-      rates: this.rates,
-      log: this.log
-    };
-  }
 
   // Public API - Status
   isInitialized() {

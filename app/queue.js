@@ -95,17 +95,6 @@ class AtomicOperationQueue {
   }
 
 
-  async saveAllData() {
-    try {
-      // Use DataManager to save accounts and rates
-      await dataManager.saveAccountsAndRates();
-      
-      console.log('Accounts and rates saved successfully');
-    } catch (error) {
-      console.error('Failed to save data:', error);
-      throw error;
-    }
-  }
 
   getStatus() {
     return {
