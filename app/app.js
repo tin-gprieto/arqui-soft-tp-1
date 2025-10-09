@@ -29,13 +29,21 @@ app.put("/accounts/:id/balance", async (req, res) => {
 
   if (!accountId || !balance) {
     return res.status(400).json({ error: "Malformed request" });
-  } else {
-    try {
-      await setAccountBalance(accountId, balance);
-      res.json(getAccounts());
-    } catch (error) {
-      res.status(500).json({ error: error.message });
-    }
+  }
+
+  if (!Number.isInteger(parseInt(accountId))) {
+    return res.status(400).json({ error: "Account ID must be a valid integer" });
+  }
+
+  if (typeof balance !== 'number' || isNaN(balance)) {
+    return res.status(400).json({ error: "Balance must be a valid number" });
+  }
+
+  try {
+    await setAccountBalance(accountId, balance);
+    res.json(getAccounts());
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -50,6 +58,14 @@ app.put("/rates", async (req, res) => {
 
   if (!baseCurrency || !counterCurrency || !rate) {
     return res.status(400).json({ error: "Malformed request" });
+  }
+
+  if (typeof baseCurrency !== 'string' || typeof counterCurrency !== 'string') {
+    return res.status(400).json({ error: "Currencies must be valid strings" });
+  }
+
+  if (typeof rate !== 'number' || isNaN(rate)) {
+    return res.status(400).json({ error: "Rate must be a valid number" });
   }
 
   try {
@@ -86,6 +102,18 @@ app.post("/exchange", async (req, res) => {
     !baseAmount
   ) {
     return res.status(400).json({ error: "Malformed request" });
+  }
+
+  if (typeof baseCurrency !== 'string' || typeof counterCurrency !== 'string') {
+    return res.status(400).json({ error: "Currencies must be valid strings" });
+  }
+
+  if (!Number.isInteger(baseAccountId) || !Number.isInteger(counterAccountId)) {
+    return res.status(400).json({ error: "Account IDs must be valid integers" });
+  }
+
+  if (typeof baseAmount !== 'number' || isNaN(baseAmount)) {
+    return res.status(400).json({ error: "Base amount must be a valid number" });
   }
 
   const exchangeRequest = { ...req.body };
