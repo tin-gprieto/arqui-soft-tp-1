@@ -1,42 +1,30 @@
 import { nanoid } from "nanoid";
 import operationQueue from "./queue.js";
-
-let accounts;
-let rates;
-let log;
+import { dataManager } from "./state.js";
 
 //call to initialize the exchange service
 export async function init() {
+  await dataManager.init();
   await operationQueue.init();
-  
-  // Get data from queue
-  const data = operationQueue.getData();
-  accounts = data.accounts;
-  rates = data.rates;
-  log = data.log;
 }
 
 //returns all internal accounts
 export function getAccounts() {
-  return accounts;
+  return dataManager.getAccounts();
 }
 
 //sets balance for an account
 export async function setAccountBalance(accountId, balance) {
-  return await operationQueue.enqueue(async (data) => {
-    const account = data.accounts.get(parseInt(accountId));
+  if (balance < 0) {
+    throw new Error('Balance cannot be negative');
+  }
+
+  return await operationQueue.enqueue(async (dataManager) => {
+    const account = dataManager.getAccountById(parseInt(accountId));
     
     if (account != null) {
       account.balance = balance;
-      // Update in all data structures
-      data.accounts.set(parseInt(accountId), account);
-      data.accountsByCurrency.set(account.currency, account);
-      
-      // Update in array
-      const index = data.accountsArray.findIndex(acc => acc.id === parseInt(accountId));
-      if (index !== -1) {
-        data.accountsArray[index] = account;
-      }
+      dataManager.updateAccount(account);
       
       return { success: true, account };
     }
@@ -47,22 +35,24 @@ export async function setAccountBalance(accountId, balance) {
 
 //returns all current exchange rates
 export function getRates() {
-  return rates;
+  return dataManager.getRates();
 }
 
 //returns the whole transaction log
 export function getLog() {
-  return operationQueue.getLog();
+  return dataManager.getLog();
 }
 
 //sets the exchange rate for a given pair of currencies, and the reciprocal rate as well
 export async function setRate(rateRequest) {
-  return await operationQueue.enqueue(async (data) => {
-    const { baseCurrency, counterCurrency, rate } = rateRequest;
+  const { baseCurrency, counterCurrency, rate } = rateRequest;
 
-    // Update rates in the queue data
-    data.rates.set(`${baseCurrency}_${counterCurrency}`, rate);
-    data.rates.set(`${counterCurrency}_${baseCurrency}`, Number((1 / rate).toFixed(5)));
+  if (rate <= 0) {
+    throw new Error('Rate must be positive');
+  }
+
+  return await operationQueue.enqueue(async (dataManager) => {
+    dataManager.setExchangeRate(baseCurrency, counterCurrency, rate);
     
     return { success: true, rate, reciprocalRate: Number((1 / rate).toFixed(5)) };
   });
@@ -70,7 +60,7 @@ export async function setRate(rateRequest) {
 
 //executes an exchange operation
 export async function exchange(exchangeRequest) {
-  return await operationQueue.enqueue(async (data) => {
+  return await operationQueue.enqueue(async (dataManager) => {
     const {
       baseCurrency,
       counterCurrency,
@@ -79,8 +69,7 @@ export async function exchange(exchangeRequest) {
       baseAmount,
     } = exchangeRequest;
 
-    //get the exchange rate
-    const exchangeRate = data.rates.get(`${baseCurrency}_${counterCurrency}`);
+    const exchangeRate = dataManager.getExchangeRate(baseCurrency, counterCurrency);
     if (!exchangeRate) {
       throw new Error(`Exchange rate not found for ${baseCurrency}/${counterCurrency}`);
     }
@@ -88,10 +77,16 @@ export async function exchange(exchangeRequest) {
     //compute the requested (counter) amount
     const counterAmount = baseAmount * exchangeRate;
     
-    //find our account on the provided (base) currency (O(1) lookup)
-    const baseAccount = data.accountsByCurrency.get(baseCurrency);
-    //find our account on the counter currency (O(1) lookup)
-    const counterAccount = data.accountsByCurrency.get(counterCurrency);
+    const baseAccount = dataManager.getAccountByCurrency(baseCurrency);
+    const counterAccount = dataManager.getAccountByCurrency(counterCurrency);
+
+    if (!baseAccount) {
+      throw new Error(`Base currency account not found for ${baseCurrency}`);
+    }
+
+    if (!counterAccount) {
+      throw new Error(`Counter currency account not found for ${counterCurrency}`);
+    }
 
     //construct the result object with defaults
     const exchangeResult = {
@@ -107,32 +102,27 @@ export async function exchange(exchangeRequest) {
     //check if we have funds on the counter currency account
     if (counterAccount.balance >= counterAmount) {
       //try to transfer from clients' base account
-      if (await transfer(clientBaseAccountId, baseAccount.id, baseAmount)) {
+        if (await checkClientAccountBalance(clientBaseAccountId, baseAmount)) {
         //try to transfer to clients' counter account
-        if (
-          await transfer(counterAccount.id, clientCounterAccountId, counterAmount)
-        ) {
+        if (checkInternalAccountBalance(counterAccount, counterAmount)) {
           //all good, update balances
           baseAccount.balance += baseAmount;
           counterAccount.balance -= counterAmount;
           
-          // Update accounts in all data structures
-          data.accounts.set(baseAccount.id, baseAccount);
-          data.accountsByCurrency.set(baseAccount.currency, baseAccount);
-          data.accounts.set(counterAccount.id, counterAccount);
-          data.accountsByCurrency.set(counterAccount.currency, counterAccount);
+          try {
+            dataManager.updateAccount(baseAccount);
+            dataManager.updateAccount(counterAccount);
+          } catch (error) {
+            throw new Error(`Error updating accounts: ${error.message}`);
+          }
           
-          // Update in array
-          const baseIndex = data.accountsArray.findIndex(acc => acc.id === baseAccount.id);
-          const counterIndex = data.accountsArray.findIndex(acc => acc.id === counterAccount.id);
-          if (baseIndex !== -1) data.accountsArray[baseIndex] = baseAccount;
-          if (counterIndex !== -1) data.accountsArray[counterIndex] = counterAccount;
-          
+          await transfer(counterAccount.id, clientCounterAccountId, counterAmount)
+          await transfer(clientBaseAccountId, baseAccount.id, baseAmount)
+
           exchangeResult.ok = true;
           exchangeResult.counterAmount = counterAmount;
         } else {
           //could not transfer to clients' counter account, return base amount to client
-          await transfer(baseAccount.id, clientBaseAccountId, baseAmount);
           exchangeResult.obs = "Could not transfer to clients' account";
         }
       } else {
@@ -151,7 +141,31 @@ export async function exchange(exchangeRequest) {
   });
 }
 
-// internal - call transfer service to execute transfer between accounts
+async function checkClientAccountBalance(accountId, amount) {
+  const min = 100;
+  const max = 300;
+  
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      // Simulated bank API call - always returns success for now
+      // const response = await fetch(`https://api.bank.com/accounts/${accountId}/balance`, {
+      //   method: 'GET',
+      //   headers: {
+      //     'Authorization': 'Bearer fake-token',
+      //     'Content-Type': 'application/json'
+      //   }
+      // });
+      
+      // Simulated response - always return true for now
+      resolve(true);
+    }, Math.random() * (max - min + 1) + min);
+  });
+}
+
+function checkInternalAccountBalance(account, amount) {
+  return account.balance >= amount;
+}
+
 async function transfer(fromAccountId, toAccountId, amount) {
   const min = 200;
   const max = 400;
