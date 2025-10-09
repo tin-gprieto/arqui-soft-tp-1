@@ -17,6 +17,9 @@ class DataManager {
     this.rates = {};                  // Same structure as source JSON
     this.log = [];
     this.initialized = false;
+    this.accountsTimer = null;
+    this.ratesTimer = null;
+    this.logTimer = null;
   }
 
   // Initialization
@@ -33,6 +36,7 @@ class DataManager {
       this._indexLog(log);
 
       this.initialized = true;
+      this._startPeriodicSaving();
       console.log('DataManager initialized successfully');
     } catch (error) {
       console.error('Failed to initialize DataManager:', error);
@@ -78,6 +82,22 @@ class DataManager {
     }
   }
 
+  // Periodic saving methods (original approach)
+  _startPeriodicSaving() {
+    // Schedule saves like the original implementation
+    this.accountsTimer = setInterval(async () => {
+      await this._saveImmediately(this.accountsArray, './state/accounts.json');
+    }, 1000); // 1 second for accounts
+
+    this.ratesTimer = setInterval(async () => {
+      await this._saveImmediately(this.rates, './state/rates.json');
+    }, 5000); // 5 seconds for rates
+
+    this.logTimer = setInterval(async () => {
+      await this._saveImmediately(this.log, './state/log.json');
+    }, 1000); // 1 second for log
+  }
+
 
   async _saveImmediately(data, filePath) {
     const fullPath = path.join(process.cwd(), filePath);
@@ -119,6 +139,14 @@ class DataManager {
     return index !== undefined ? this.accountsArray[index] : undefined;
   }
 
+  getAccountIndexByCurrency(currency) {
+    return this.accountsByCurrency.get(currency);
+  }
+
+  getAccountIndexById(id) {
+    return this.accounts.get(parseInt(id));
+  }
+
   getExchangeRate(baseCurrency, counterCurrency) {
     return this.rates[baseCurrency]?.[counterCurrency];
   }
@@ -126,13 +154,29 @@ class DataManager {
   // Public API - Data Modification
   updateAccount(account) {
     const existingIndex = this.accounts.get(account.id);
-    
+
     if (existingIndex === undefined) {
       throw new Error(`Account ${account.id} not found`);
     }
-    
+
     this.accountsArray[existingIndex] = account;
     this.accountsByCurrency.set(account.currency, existingIndex);
+  }
+
+  updateAccountBalance(index, newBalance) {
+    if (index === undefined || index < 0 || index >= this.accountsArray.length) {
+      throw new Error(`Invalid account index: ${index}`);
+    }
+
+    if (typeof newBalance !== 'number' || isNaN(newBalance)) {
+      throw new Error('Balance must be a valid number');
+    }
+
+    if (newBalance < 0) {
+      throw new Error('Balance cannot be negative');
+    }
+
+    this.accountsArray[index].balance = newBalance;
   }
 
   setExchangeRate(baseCurrency, counterCurrency, rate) {
@@ -151,57 +195,25 @@ class DataManager {
 
 
   async addLogEntryAndSave(logEntry) {
-    return new Promise(async (resolve, reject) => {
-      try {
-        // Add to log array
-        this.log.push(logEntry);
-        
-        // Save log immediately
-        await this._saveImmediately(this.log, './state/log.json');
-        
-        console.log(`Log entry added and saved: ${logEntry.id}`);
-        resolve(logEntry);
-      } catch (error) {
-        console.error('Failed to add log entry:', error);
-        reject(error);
-      }
-    });
-  }
-
-  // Public API - Persistence
-  async saveAccountsAndRates() {
     try {
-      await Promise.all([
-        this._saveImmediately(this.accountsArray, './state/accounts.json'),
-        this._saveImmediately(this.rates, './state/rates.json')
-      ]);
+      // Add to log array - periodic save will handle persistence
+      this.log.push(logEntry);
       
-      console.log('Accounts and rates saved successfully');
+      console.log(`Log entry added: ${logEntry.id}`);
+      return logEntry;
     } catch (error) {
-      console.error('Failed to save data:', error);
+      console.error('Failed to add log entry:', error);
       throw error;
     }
   }
 
-
-  // Public API - Transaction Support
-  createBackup() {
-    return {
-      accounts: new Map(this.accounts),
-      accountsByCurrency: new Map(this.accountsByCurrency),
-      accountsArray: [...this.accountsArray],
-      rates: JSON.parse(JSON.stringify(this.rates)), // Deep copy of object
-      log: [...this.log]
-    };
+  // Public API - Persistence
+  async saveAccountsAndRates() {
+    // Periodic saves will handle persistence automatically
+    // No immediate action needed
   }
 
-  restoreFromBackup(backup) {
-    this.accounts = new Map(backup.accounts);
-    this.accountsByCurrency = new Map(backup.accountsByCurrency);
-    this.accountsArray = [...backup.accountsArray];
-    this.rates = JSON.parse(JSON.stringify(backup.rates)); // Deep copy of object
-    this.log = [...backup.log];
-  }
+
 
 
   // Public API - Status
