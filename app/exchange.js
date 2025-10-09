@@ -102,8 +102,8 @@ export async function exchange(exchangeRequest) {
       //try to transfer to clients' counter account
       if (await transfer(counterAccount.id, clientCounterAccountId, counterAmount)) {
         //all good, BOTH transfers succeeded - now update balances atomically
-        dataManager.updateAccountBalance(baseAccountIndex, baseAccount.balance + baseAmount);
-        dataManager.updateAccountBalance(counterAccountIndex, counterAccount.balance - counterAmount);
+        baseAccount.balance += baseAmount;
+        counterAccount.balance -= counterAmount;
 
         exchangeResult.ok = true;
         exchangeResult.counterAmount = counterAmount;
