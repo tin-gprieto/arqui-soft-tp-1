@@ -84,6 +84,25 @@ class AtomicOperationQueue {
     });
   }
 
+  // Add log entry and save immediately
+  async addLogEntry(logEntry) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        // Add to log array
+        this.data.log.push(logEntry);
+        
+        // Save log immediately
+        await this.saveImmediately(this.data.log, './state/log.json');
+        
+        console.log(`Log entry added and saved: ${logEntry.id}`);
+        resolve(logEntry);
+      } catch (error) {
+        console.error('Failed to add log entry:', error);
+        reject(error);
+      }
+    });
+  }
+
   async processQueue() {
     if (this.processing || this.queue.length === 0) return;
     
@@ -146,13 +165,13 @@ class AtomicOperationQueue {
       // Use the maintained array for direct persistence
       const ratesObject = this.convertRatesToObject();
       
+      // Save accounts and rates (logs are saved separately only for exchange operations)
       await Promise.all([
         this.saveImmediately(this.data.accountsArray, './state/accounts.json'),
-        this.saveImmediately(ratesObject, './state/rates.json'),
-        this.saveImmediately(this.data.log, './state/log.json')
+        this.saveImmediately(ratesObject, './state/rates.json')
       ]);
       
-      console.log('All data saved successfully');
+      console.log('Accounts and rates saved successfully');
     } catch (error) {
       console.error('Failed to save data:', error);
       throw error;
